@@ -4,3 +4,8 @@ Another simple ML program that follows the structure of a classic binary labelin
 
 # Overview
 
+![Random Forest Algorithm Logic Flow](assets/graphs/Random%20Forest%20Algorithm%20Logic%20Flow.png)
+
+# Example
+
+(Dataset used)[https://www.kaggle.com/datasets/akshaydattatraykhare/diabetes-dataset]
