@@ -8,4 +8,4 @@ Another simple ML program that follows the structure of a classic binary labelin
 
 # Example
 
-(Dataset used)[https://www.kaggle.com/datasets/akshaydattatraykhare/diabetes-dataset]
+[Dataset used](https://www.kaggle.com/datasets/akshaydattatraykhare/diabetes-dataset)
