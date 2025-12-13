@@ -1,3 +1,3 @@
 #pragma once
 
-float calculateGiniImpurity();
+float calculateEntropy();
