@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import Tree from 'react-d3-tree';
+import FileUploader from './FileUploader.tsx'
 import './App.css'
 
 const data = {
@@ -62,6 +63,9 @@ function App() {
             </p>
 
             <Tree data={data} orientation="vertical" />
+
+            <FileUploader />
+
         </>
     )
 }

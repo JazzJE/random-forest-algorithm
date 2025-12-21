@@ -1,4 +1,4 @@
-#include "decision_tree.h"
+#include "DecisionTree.h"
 
 // Continuous split node implementations
 DecisionTree::ContinuousSplitNode::ContinuousSplitNode() = default;

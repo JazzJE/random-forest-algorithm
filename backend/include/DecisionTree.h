@@ -12,7 +12,7 @@ class DecisionTree {
             std::unique_ptr<Node> left_node;
             std::unique_ptr<Node> right_node;
             size_t splitting_feature_index;
-            virtual ~Node() = 0;  
+            virtual ~Node() {};  
         };
 
         // Splitting a discrete valued feature
@@ -38,7 +38,7 @@ class DecisionTree {
 
     public:
 
-        DecisionTree::DecisionTree(
+        DecisionTree(
             const float* samples,
             size_t number_of_samples,
             size_t number_of_features,
