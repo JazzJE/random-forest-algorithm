@@ -66,17 +66,9 @@ function FileUploader() {
     formData.append("file", selectedFile); // MUST match server key
     formData.append("continuous_features", JSON.stringify([...continuousFeatures]));
     formData.append("target_label", targetLabel);
-    formData.append("headers", JSON.stringify(headers));
-
-    console.log(continuousFeatures);
-    console.log(targetLabel);
-    console.log(headers);
-
-    console.log(formData);
-    let res;
 
     try {
-      res = await fetch("http://localhost:8080/upload_dataset", {
+      const res = await fetch("http://localhost:8080/upload_dataset", {
         method: "POST",
         body: formData,
         // DO NOT set Content-Type manually
@@ -90,7 +82,6 @@ function FileUploader() {
       console.log(text);
     } catch (err) {
       console.error("Upload failed:", err);
-      console.error(res);
     }
   };
 

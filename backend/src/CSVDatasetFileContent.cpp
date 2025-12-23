@@ -37,9 +37,8 @@ CSVDatasetFileContent::CSVDatasetFileContent(
  *      The number of features each sample has
  *      The indices of the features which are continuously valued
  * 
- * @note The last column of the dataset should ALWAYS be the target labels
  */
-CSVDatasetFileContent processCSVDatasetFile(const char* csvData)
+CSVDatasetFileContent processCSVDatasetFile(const char* csvData, std::string target_label_column_name)
 {
     double* sample_features = nullptr;
     size_t* sample_labels = nullptr;
@@ -50,7 +49,7 @@ CSVDatasetFileContent processCSVDatasetFile(const char* csvData)
     size_t number_of_features = 0;
     std::set<int> continuous_feature_indices;
 
-    std::set<std::string> labels;
+    std::set<std::string> unique_labels;
 
     // Copy the file into the program
     std::istringstream file_content(csvData);

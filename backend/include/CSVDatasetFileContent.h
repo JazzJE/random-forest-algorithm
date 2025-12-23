@@ -22,4 +22,4 @@ struct CSVDatasetFileContent
         size_t number_of_features, std::set<int> continuous_feature_indices);
 };
 
-CSVDatasetFileContent processCSVDatasetFile(const char* csvData);
+CSVDatasetFileContent processCSVDatasetFile(const char* csvData, std::string target_label_column_name);

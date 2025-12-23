@@ -8,10 +8,10 @@
 
 #include "server.h"
 #include "math_functions.h"
+#include "utils.h"
+#include "containers.h"
 #include "Constants.h"
-
-int add(int a, int b)
-{ return a + b; }
+#include "CSVDatasetFileContent.h"
 
 void start_server() {
     // Create uploads directory if it doesn't exist
@@ -71,14 +71,6 @@ void start_server() {
             return;
         }
 
-        // Check if the headers array field is missing
-        if (!req.form.has_field("headers"))
-        {
-            res.status = 400;
-            res.set_content("No 'headers' array found", "text/plain");
-            return;
-        }
-
         // Check if the target label field is missing
         if (!req.form.has_field("target_label"))
         {
@@ -91,7 +83,6 @@ void start_server() {
         const auto& file = req.form.get_file("file");
         // Get the form fields
         std::string continuous_json = req.form.get_field("continuous_features");
-        std::string headers_json = req.form.get_field("headers");
         std::string target_label = req.form.get_field("target_label");
         
         std::cout << "Filename: " << file.filename << std::endl;
@@ -99,10 +90,14 @@ void start_server() {
         std::cout << "Content size: " << file.content.size() << std::endl;
         std::cout << continuous_json << std::endl;
         std::cout << target_label << std::endl;
-        std::cout << headers_json << std::endl;
         
         // Parse the file into the program
+        DynamicArray<std::string> headers_array = parseStringArray(continuous_json);
+        // Print out each of the strings
+        for (size_t i = 0; i < headers_array.number_of_elements; i++)
+            std::cout << headers_array.elements[i] << std::endl;
 
+        //CSVDatasetFileContent dataset_content = processCSVDatasetFile(file.content.data(), target_label);
 
         // If the file fails to parse, then return an error code
         std::ofstream out("uploads/" + file.filename, std::ios::binary);
