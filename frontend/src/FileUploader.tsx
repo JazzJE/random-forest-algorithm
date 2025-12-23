@@ -64,6 +64,7 @@ function FileUploader() {
     // Append form data
     const formData = new FormData();
     formData.append("file", selectedFile); // MUST match server key
+    formData.append("headers", JSON.stringify([...headers]));
     formData.append("continuous_features", JSON.stringify([...continuousFeatures]));
     formData.append("target_label", targetLabel);
 

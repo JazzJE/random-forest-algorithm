@@ -63,6 +63,14 @@ void start_server() {
             return;
         }
 
+        // Check if the headers array is missing
+        if (!req.form.has_field("headers"))
+        {
+            res.status = 400;
+            res.set_content("No 'headers' found", "text/plain");
+            return;
+        }
+
         // Check if the continuous_features array field is missing
         if (!req.form.has_field("continuous_features"))
         {
@@ -82,34 +90,15 @@ void start_server() {
         // Get the file using req.form.get_file()
         const auto& file = req.form.get_file("file");
         // Get the form fields
-        std::string continuous_json = req.form.get_field("continuous_features");
+        std::string headers_string_array = req.form.get_field("headers");
+        std::string continuous_features_string_array = req.form.get_field("continuous_features");
         std::string target_label = req.form.get_field("target_label");
         
-        std::cout << "Filename: " << file.filename << std::endl;
-        std::cout << "Content-Type: " << file.content_type << std::endl;
-        std::cout << "Content size: " << file.content.size() << std::endl;
-        std::cout << continuous_json << std::endl;
-        std::cout << target_label << std::endl;
-        
         // Parse the file into the program
-        DynamicArray<std::string> headers_array = parseStringArray(continuous_json);
-        // Print out each of the strings
-        for (size_t i = 0; i < headers_array.number_of_elements; i++)
-            std::cout << headers_array.elements[i] << std::endl;
+        DynamicArray<std::string> head_array = parseStringArray(headers_string_array);
+        DynamicArray<std::string> cont_array = parseStringArray(continuous_features_string_array);
 
         //CSVDatasetFileContent dataset_content = processCSVDatasetFile(file.content.data(), target_label);
-
-        // If the file fails to parse, then return an error code
-        std::ofstream out("uploads/" + file.filename, std::ios::binary);
-        if (!out) 
-        {
-            res.status = 500;
-            res.set_content("Failed to create file", "text/plain");
-            return;
-        }
-        
-        out.write(file.content.data(), file.content.size());
-        out.close();
         
         res.set_content("File uploaded successfully: " + file.filename, "text/plain");
     });

@@ -1,16 +1,15 @@
 #include "utils.h"
 #include <memory>
-#include <iostream>
 
 // Return all of the trees along with corresponding model/meta data into a JSON object
-nlohmann::json convertModelToJSON(RandomForestModel provided_model)
+nlohmann::json convertModelToJSON(const RandomForestModel& provided_model)
 {
     nlohmann::json j;
     return j;
 }
 
 // Use a DFS algorithm to traverse the tree and return all the nodes as a JSON object
-nlohmann::json convertTreeToJSON(DecisionTree provided_tree)
+nlohmann::json convertTreeToJSON(const DecisionTree& provided_tree)
 {
     nlohmann::json j;
     return j;
@@ -39,7 +38,7 @@ DecisionTree convertJSONToTree(nlohmann::json provided_tree_json)
 }
 
 /**
-*   @brief Take in a string of an array and then return a dynamic array of it
+*   @brief Take in a string of an array (i.e. '["Apples", "Oranges", "Grapes"]') and then return a dynamic array of it as individual strings
 *   
 *   @note Each string inside of the string array should not have any extra '"' characters, as it will 
 *       mess up the logic flow
