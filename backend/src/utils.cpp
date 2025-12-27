@@ -1,5 +1,7 @@
 #include "utils.h"
 #include <memory>
+#include <iostream>
+#include <iomanip>
 
 // Return all of the trees along with corresponding model/meta data into a JSON object
 nlohmann::json convertModelToJSON(const RandomForestModel& provided_model)
@@ -52,6 +54,7 @@ DynamicArray<std::string> parseStringArray(std::string string_array)
     for (size_t i = 0; i < string_array.length(); i++)
         if (string_array[i] == ',')
             new_array.number_of_elements += 1;
+    new_array.number_of_elements += 1;
     
     // Edge cases where if there are no commas, meaning 0 or 1 elements
     // If the number of commas is 0 and there are no quotation marks, then there are no elements
@@ -71,6 +74,10 @@ DynamicArray<std::string> parseStringArray(std::string string_array)
     {
         // Go to the next character
         current_char_index += 1;
+
+        // Edge case for if there's whitespaces, we skip these characters
+        if (isspace(string_array[current_char_index]))
+            continue;
 
         // If the string append is currently false, the current character is a '"', and the previous character
         // was a '[' or ',', then enable it and continue to next character
@@ -103,4 +110,52 @@ DynamicArray<std::string> parseStringArray(std::string string_array)
     }
     
     return new_array;
+}
+
+void printDataset(const CSVDatasetFileContent& data)
+{
+    std::cout << "\n========== CSV DATASET ==========\n";
+
+    std::cout << "Samples:   " << data.number_of_samples << "\n";
+    std::cout << "Features:  " << data.number_of_features << "\n";
+    std::cout << "Target:    " << data.target_label_column_name << "\n\n";
+
+    // Feature names
+    std::cout << "Feature Names:\n";
+    for (size_t i = 0; i < data.number_of_features; ++i)
+    {
+        std::cout << "  [" << i << "] " << data.feature_names.elements[i];
+
+        if (data.continuous_feature_indices.count(i))
+            std::cout << "  (continuous)";
+        else
+            std::cout << "  (boolean)";
+
+        std::cout << "\n";
+    }
+
+    std::cout << "\n";
+
+    // Sample data
+    std::cout << "Samples:\n";
+
+    for (size_t i = 0; i < data.number_of_samples; ++i)
+    {
+        std::cout << "Line " << i + 2 << "  Label: " << data.sample_labels.elements[i] << "\n";
+
+        for (size_t j = 0; j < data.number_of_features; ++j)
+        {
+            size_t idx = i * data.number_of_features + j;
+
+            std::cout << "   "
+                      << std::setw(15) << data.feature_names.elements[j]
+                      << " = "
+                      << std::setw(8) << data.sample_data.elements[idx]
+                      << "\n";
+        }
+
+        std::cout << "\n";
+    }
+
+    std::cout << "=================================\n";
 }

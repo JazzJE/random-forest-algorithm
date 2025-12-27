@@ -38,7 +38,6 @@ void start_server() {
 
         std::string cont_feat_ident(Constants::CONTINUOUS_FEATURE_IDENTIFIER);
         j["CONTINUOUS_FEATURE_IDENTIFIER"] = cont_feat_ident;
-
         j["DAT_FILE_IDENTIFIER"] = Constants::DAT_FILE_IDENTIFIER;
 
         res.set_content(j.dump(), "application/json");
@@ -93,12 +92,14 @@ void start_server() {
         std::string headers_string_array = req.form.get_field("headers");
         std::string continuous_features_string_array = req.form.get_field("continuous_features");
         std::string target_label = req.form.get_field("target_label");
-        
-        // Parse the file into the program
-        DynamicArray<std::string> head_array = parseStringArray(headers_string_array);
-        DynamicArray<std::string> cont_array = parseStringArray(continuous_features_string_array);
 
-        //CSVDatasetFileContent dataset_content = processCSVDatasetFile(file.content.data(), target_label);
+        // Parse the file into the program
+        DynamicArray<std::string> headers_array = parseStringArray(headers_string_array);
+        DynamicArray<std::string> continuous_features_headers_array = parseStringArray(continuous_features_string_array);
+
+        CSVDatasetFileContent dataset_content = processCSVDatasetFile(file.content.data(), headers_array, 
+            continuous_features_headers_array, target_label);
+        printDataset(dataset_content);
         
         res.set_content("File uploaded successfully: " + file.filename, "text/plain");
     });

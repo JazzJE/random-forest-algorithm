@@ -6,13 +6,13 @@
 #include "math_functions.h"
 
 // Uses basic entropy calculation with log functions
-double calculateEntropy(const std::string* target_labels, size_t number_of_target_labels)
+double calculateEntropy(DynamicArray<std::string> target_labels)
 {
 	// Count the number of samples in each target label group
 	std::unordered_map<std::string, int> sample_label_counter;
-	for (size_t i = 0; i < number_of_target_labels; ++i)
+	for (size_t i = 0; i < target_labels.number_of_elements; ++i)
 	{
-		std::string current_label = target_labels[i];
+		std::string current_label = target_labels.elements[i];
 		
 		// If the target label of the current sample doesn't exist in the map yet, then set it as 0
 		if (sample_label_counter.find(current_label) == sample_label_counter.end())
@@ -31,7 +31,7 @@ double calculateEntropy(const std::string* target_labels, size_t number_of_targe
 			continue;
 		
 		// Else, add the current entropy of the samples
-		double probability = static_cast<double>(count) / number_of_target_labels;
+		double probability = static_cast<double>(count) / target_labels.number_of_elements;
 		entropy_sum += probability * log2(probability);
 	}
 
