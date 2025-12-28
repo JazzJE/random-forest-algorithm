@@ -12,12 +12,15 @@
 #include "containers.h"
 #include "Constants.h"
 #include "CSVDatasetFileContent.h"
+#include "exceptions.h"
 
 void start_server() {
     // Create uploads directory if it doesn't exist
     std::filesystem::create_directories("uploads");
 
     httplib::Server svr;
+
+    std::optional<CSVDatasetFileContent> dataset_content;
 
     svr.set_default_headers(
         {
@@ -44,7 +47,7 @@ void start_server() {
     });
 
     // Uploading CSV dataset to the project
-    svr.Post("/upload_dataset", [](const httplib::Request& req, httplib::Response& res) 
+    svr.Post("/upload_dataset", [&](const httplib::Request& req, httplib::Response& res) 
     {
         // Check if this is multipart form data
         if (!req.is_multipart_form_data()) 
@@ -96,12 +99,56 @@ void start_server() {
         // Parse the file into the program
         DynamicArray<std::string> headers_array = parseStringArray(headers_string_array);
         DynamicArray<std::string> continuous_features_headers_array = parseStringArray(continuous_features_string_array);
-
-        CSVDatasetFileContent dataset_content = processCSVDatasetFile(file.content.data(), headers_array, 
-            continuous_features_headers_array, target_label);
-        printDataset(dataset_content);
         
-        res.set_content("File uploaded successfully: " + file.filename, "text/plain");
+        try 
+        {
+            dataset_content.emplace(
+                processCSVDatasetFile(
+                    file.content.data(),
+                    headers_array,
+                    continuous_features_headers_array,
+                    target_label
+                )
+            );
+
+            printDataset(*dataset_content);
+
+            Constants::UploadStatus status = Constants::UploadStatus::Success;
+
+            nlohmann::json res_json;
+            res_json["status"] = to_string(status);
+            res_json["message"] = std::string("File uploaded successfuly - ") + file.filename;
+
+            res.set_content(res_json.dump(), "application/json");
+        }
+
+        // Empty the dataset content and return the line in which the error occurred
+        catch (const CSVParseException& error)
+        {
+            dataset_content.emplace(CSVDatasetFileContent());
+
+            Constants::UploadStatus status = Constants::UploadStatus::CSVParseError;
+
+            nlohmann::json res_json;
+            res_json["status"] = to_string(status);
+            res_json["message"] = std::string("File failed to upload - ") + error.what();
+
+            res.set_content(res_json.dump(), "application/json");
+        }
+
+        // Empty the dataset content if failed to parse at all
+        catch (...) 
+        {
+            dataset_content.emplace(CSVDatasetFileContent());
+
+            Constants::UploadStatus status = Constants::UploadStatus::CSVParseError;
+
+            nlohmann::json res_json;
+            res_json["status"] = to_string(status);
+            res_json["message"] = "File failed to upload due to unknown error";
+
+            res.set_content(res_json.dump(), "application/json");
+        }
     });
 
     std::cout << "Server running on http://localhost:8080\n";

@@ -1,11 +1,34 @@
 import { useState, useRef } from "react";
 
-function FileUploader() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [headers, setHeaders] = useState<string[]>([]);
-  const [continuousFeatures, setContinuousFeatures] = useState<Set<string>>(new Set());
-  const [targetLabel, setTargetLabel] = useState<string | null>(null);
+type StatusType = "success" | "csv_parse_error" | "no_file_inputted";
+interface fileResponse {
+  status: StatusType;
+  message: string;
+}
 
+interface Props {
+  fileUploadedStatus: fileResponse;
+  setFileUploadedStatus: React.Dispatch<React.SetStateAction<fileResponse>>;
+  headers: string[]
+  setHeaders: (h: string[]) => void;
+  continuousFeatures : Set<string>;
+  setContinuousFeatures: React.Dispatch<React.SetStateAction<Set<string>>>;
+  targetLabel : string | null;
+  setTargetLabel: (t: string | null) => void;
+}
+
+function FileUploader({
+    fileUploadedStatus,
+    setFileUploadedStatus,
+    headers,
+    setHeaders,
+    continuousFeatures,
+    setContinuousFeatures,
+    targetLabel,
+    setTargetLabel
+  }: Props) {
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,6 +55,7 @@ function FileUploader() {
     // Verify the file is a CSV
     const chosenFile = e.target.files?.[0] ?? null;
     if (!chosenFile || !isLikelyCSV(chosenFile)) {
+      // Clear the text by the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -39,13 +63,13 @@ function FileUploader() {
       return;
     }
 
-    // Update the states for each
+    // Update the states for each status
     const newHeaders = await parseHeaders(chosenFile);
     setHeaders(newHeaders);
     setContinuousFeatures(new Set());
     setTargetLabel(null);
-
     setSelectedFile(chosenFile);
+
   };
 
   const onFileUpload = async () => {
@@ -72,15 +96,15 @@ function FileUploader() {
       const res = await fetch("http://localhost:8080/upload_dataset", {
         method: "POST",
         body: formData,
-        // DO NOT set Content-Type manually
       });
 
       if (!res.ok) {
-        throw new Error(`Upload failed: ${res.status}`);
+        throw new Error(`${res.status}`);
       }
 
-      const text = await res.text();
-      console.log(text);
+      const data = await res.json();
+      setFileUploadedStatus(data);
+
     } catch (err) {
       console.error("Upload failed:", err);
     }
@@ -89,15 +113,15 @@ function FileUploader() {
   return (
     <div>
       <input type="file" ref={fileInputRef} accept=".csv,text/csv" onChange={onFileChange} />
-      <button onClick={onFileUpload}>Upload</button>
+      <button onClick={onFileUpload}>Upload to Server</button>
+      <p>File Uploaded Status: <strong>{fileUploadedStatus.message}</strong></p>
 
       {selectedFile && (
         <div>
 
           {/* Metadata */}
-          <p>Name: {selectedFile.name}</p>
-          <p>Type: {selectedFile.type}</p>
-          <p>Size: {selectedFile.size} bytes</p>
+          <p><strong>Name</strong>: {selectedFile.name}</p>
+          <p><strong>Size</strong>: {selectedFile.size} bytes</p>
 
           {/* Continuous feature elements chooser */}
           <p>Select the feature columns that should be treated as <strong><em>continuous</em></strong>:</p>
@@ -106,7 +130,7 @@ function FileUploader() {
             <label key={header} style={{ display: "block" }}>
               <input
                 type="checkbox"
-                disabled={targetLabel === header}
+                disabled={targetLabel === header || fileUploadedStatus.status === "success"}
                 checked={continuousFeatures.has(header)}
                 onChange={(e) => {
                   setContinuousFeatures(prev => {
@@ -132,7 +156,7 @@ function FileUploader() {
               <label key={header} style={{ display: "block" }}>
                 <input
                   type="radio"
-                  disabled={continuousFeatures.has(header)}
+                  disabled={continuousFeatures.has(header) || fileUploadedStatus.status === "success"}
                   name="targetLabel"
                   value={header}
                   checked={targetLabel === header}

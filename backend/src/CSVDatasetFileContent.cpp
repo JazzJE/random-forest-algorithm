@@ -1,10 +1,10 @@
 #include <sstream>
 #include <string>
 #include <set>
-#include <iostream>
 #include <limits>
 
 #include "CSVDatasetFileContent.h"
+#include "exceptions.h"
 
 // The struct should not have to create these parameters itself, and instead is provided them
 CSVDatasetFileContent::CSVDatasetFileContent(
@@ -56,26 +56,7 @@ CSVDatasetFileContent processCSVDatasetFile(
     ss.clear();
     ss.str(line);
 
-    auto dump = [](const std::string& s)
-    {
-        std::cout << "[";
-        for (unsigned char c : s)
-        {
-            if (c == '\r') std::cout << "\\r";
-            else if (c == '\n') std::cout << "\\n";
-            else if (c == '\t') std::cout << "\\t";
-            else std::cout << c;
-        }
-        std::cout << "]  ";
-
-        for (unsigned char c : s)
-            std::cout << int(c) << " ";
-
-        std::cout << "\n";
-    };
-
     // Check if each header element is the same as the file line element
-    std::cout << line << std::endl;
     size_t counter_index = 0;
     while (getline(ss, value, ','))
     {
@@ -89,7 +70,6 @@ CSVDatasetFileContent processCSVDatasetFile(
     }
 
     // If the number of headers counted inside of the file is not the same as the number of elements in the header array, they are not the same
-    std::cout << counter_index << " " << headers_array.number_of_elements << std::endl;
     if (counter_index != headers_array.number_of_elements)
         return CSVDatasetFileContent();
 
@@ -126,24 +106,27 @@ CSVDatasetFileContent processCSVDatasetFile(
         else
             feature_names.elements[i] = headers_array.elements[i];
 
-        // Below structure for getting indices of the continuous features
-        bool is_continuous_feature = false;
-        // Check if the current feature is in the continuous feature array
-        for (size_t j = 0; j < continuous_features_names_array.number_of_elements; ++j)
-            if (headers_array.elements[i] == continuous_features_names_array.elements[j])
-            {
-                is_continuous_feature = true;
-                break;
+        // Below structure for getting indices of the continuous features, only if there are continuous features
+        if (continuous_features_names_array.number_of_elements != 0)
+        {
+            bool is_continuous_feature = false;
+            // Check if the current feature is in the continuous feature array
+            for (size_t j = 0; j < continuous_features_names_array.number_of_elements; ++j)
+                if (headers_array.elements[i] == continuous_features_names_array.elements[j])
+                {
+                    is_continuous_feature = true;
+                    break;
+                }
+            // If the feature was identified as continuous, then identify which feature index it will be
+            if (is_continuous_feature)
+            {  
+                // If the passed over is enabled, then it's the (i - 1)th index
+                if (passed_over_target_column_index)
+                    continuous_feature_indices.insert(i - 1);
+                // If the passed over is disabled, then it's the ith index
+                else   
+                    continuous_feature_indices.insert(i);
             }
-        // If the feature was identified as continuous, then identify which feature index it will be
-        if (is_continuous_feature)
-        {  
-            // If the passed over is enabled, then it's the (i - 1)th index
-            if (passed_over_target_column_index)
-                continuous_feature_indices.insert(i - 1);
-            // If the passed over is disabled, then it's the ith index
-            else   
-                continuous_feature_indices.insert(i);
         }
     }
 
@@ -161,11 +144,13 @@ CSVDatasetFileContent processCSVDatasetFile(
     file_content.clear();     
     file_content.seekg(0, std::ios::beg);
     getline(file_content, line, '\n');
+    size_t current_line = 1;
 
     // For each sample, parse in the features
     for (size_t sample_index = 0; sample_index < number_of_samples; ++sample_index)
     {
         getline(file_content, line, '\n');
+        ++current_line;
         passed_over_target_column_index = false;
 
         ss.clear();
@@ -176,7 +161,15 @@ CSVDatasetFileContent processCSVDatasetFile(
         {
             // Get the value and parse it into a double
             getline(ss, value, ',');
-            double double_value = std::stod(value);
+            double double_value;
+
+            // Ensure there is no Windows ending line
+            if (!value.empty() && value.back() == '\r')
+                value.pop_back();
+
+            // If the double_value fails to parse, then throw an exception
+            try { double_value = std::stod(value); }
+            catch (...) { throw CSVParseException(std::string("Error found on line ") + std::to_string(current_line)); }
 
             // If we are at the target label index, then continue to the next iteration after placing the string in the sample labels array
             if (column_index == target_label_column_index)

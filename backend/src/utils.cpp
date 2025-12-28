@@ -49,20 +49,16 @@ DynamicArray<std::string> parseStringArray(std::string string_array)
 {   
     // Create an empty dynamic array object of strings
     DynamicArray<std::string> new_array;
+
+    // Edge case where there are zero elements, meaning there should be no quotation marks in the array
+    if (string_array.find('"') == std::string::npos)
+        return new_array;
     
     // Count the number of commas (c), where the number of elements will be c + 1
     for (size_t i = 0; i < string_array.length(); i++)
         if (string_array[i] == ',')
             new_array.number_of_elements += 1;
     new_array.number_of_elements += 1;
-    
-    // Edge cases where if there are no commas, meaning 0 or 1 elements
-    // If the number of commas is 0 and there are no quotation marks, then there are no elements
-    if (new_array.number_of_elements == 0 && string_array.find('"') == std::string::npos)
-        return new_array;
-    // Else if the number of commas is 0, the number of elements is therefore at least 1
-    else if (new_array.number_of_elements == 0)
-        new_array.number_of_elements = 1;
 
     new_array.elements = std::make_unique<std::string[]>(new_array.number_of_elements);
     size_t current_char_index = 0;

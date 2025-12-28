@@ -13,9 +13,24 @@ const data = {
     ],
 };
 
+// To standardize the status messages which the backend will send
+type StatusType = "success" | "csv_parse_error" | "no_file_inputted";
+interface fileResponse {
+  status: StatusType;
+  message: string;
+}
+
 function App() {
-    const [count, setCount] = useState(0)
     const [backendStatus, setBackendStatus] = useState<string>("")
+
+    // Collected during file upload process
+    const [fileUploadedStatus, setFileUploadedStatus] = useState<fileResponse>({
+        status: "no_file_inputted",
+        message: "No files uploaded yet"
+    });
+    const [headers, setHeaders] = useState<string[]>([]);
+    const [continuousFeatures, setContinuousFeatures] = useState<Set<string>>(new Set());
+    const [targetLabel, setTargetLabel] = useState<string | null>(null);
 
     // Fetch backend on mount
     useEffect(() => {
@@ -45,10 +60,6 @@ function App() {
             <h1>Vite + React</h1>
 
             <div className="card">
-                <button onClick={() => setCount((count) => count + 1)}>
-                    count is {count}
-                </button>
-
                 <p>
                     Backend status: <strong>{backendStatus}</strong>
                 </p>
@@ -58,14 +69,23 @@ function App() {
                 </p>
             </div>
 
-            <p className="read-the-docs">
-                Click on the Vite and React logos to learn more
-            </p>
-
             <Tree data={data} orientation="vertical" />
 
-            <FileUploader />
+            <FileUploader
+            fileUploadedStatus={fileUploadedStatus}
+            setFileUploadedStatus={setFileUploadedStatus}
+            headers={headers}
+            setHeaders={setHeaders}
+            continuousFeatures={continuousFeatures}
+            setContinuousFeatures={setContinuousFeatures}
+            targetLabel={targetLabel}
+            setTargetLabel={setTargetLabel}
+            />
 
+            {/* Parent can now react to everything */}
+            {fileUploadedStatus.status === "success" && (
+                <button>Train Model</button>
+            )}
         </>
     )
 }
