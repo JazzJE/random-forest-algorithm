@@ -10,13 +10,6 @@
 }
 
 /* For drawing the loading icon */
-#loading-root {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: all;
-}
-
 .loading-overlay {
   position: fixed;
   inset: 0;

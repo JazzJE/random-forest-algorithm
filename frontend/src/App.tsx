@@ -52,6 +52,8 @@ function App() {
 
     return (
         <>
+            {loadingStatus && <LoadingOverlay />}
+
             <div className="card">
                 <p>
                     Backend status: <strong>{backendStatus}</strong>
@@ -59,9 +61,12 @@ function App() {
             </div>
 
             <Tree data={data} orientation="vertical" />
-            
+
             {/* Model trainer option */}
-            {fileUploadedStatus.status === "success" && (<TreeGenerator/>)}
+            {fileUploadedStatus.status === "success" && 
+            (<TreeGenerator
+            setLoadingStatus={setLoadingStatus}
+            />)}
 
             <FileUploader
             fileUploadedStatus={fileUploadedStatus}
@@ -76,7 +81,7 @@ function App() {
             setLoadingStatus={setLoadingStatus}
             />
 
-            {loadingStatus && <LoadingOverlay />}
+            
         </>
     )
 }
