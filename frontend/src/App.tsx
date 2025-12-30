@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import Tree from 'react-d3-tree';
 import FileUploader from './FileUploader.tsx'
 import './App.css'
+import TreeGenerator from './TreeGenerator.tsx';
+import LoadingOverlay from './LoadingOverlay.tsx'
 
 const data = {
     name: 'Start',
@@ -21,7 +21,11 @@ interface fileResponse {
 }
 
 function App() {
+    // Tell the user if the backend is running
     const [backendStatus, setBackendStatus] = useState<string>("")
+    
+    // State to disable everything when a process is loading
+    const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
 
     // Collected during file upload process
     const [fileUploadedStatus, setFileUploadedStatus] = useState<fileResponse>({
@@ -48,28 +52,16 @@ function App() {
 
     return (
         <>
-            <div>
-                <a href="https://vite.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo" />
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo" />
-                </a>
-            </div>
-
-            <h1>Vite + React</h1>
-
             <div className="card">
                 <p>
                     Backend status: <strong>{backendStatus}</strong>
                 </p>
-
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
             </div>
 
             <Tree data={data} orientation="vertical" />
+            
+            {/* Model trainer option */}
+            {fileUploadedStatus.status === "success" && (<TreeGenerator/>)}
 
             <FileUploader
             fileUploadedStatus={fileUploadedStatus}
@@ -80,14 +72,13 @@ function App() {
             setContinuousFeatures={setContinuousFeatures}
             targetLabel={targetLabel}
             setTargetLabel={setTargetLabel}
+            loadingStatus={loadingStatus}
+            setLoadingStatus={setLoadingStatus}
             />
 
-            {/* Parent can now react to everything */}
-            {fileUploadedStatus.status === "success" && (
-                <button>Train Model</button>
-            )}
+            {loadingStatus && <LoadingOverlay />}
         </>
     )
 }
 
-export default App
+export default App;

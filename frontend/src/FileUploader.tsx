@@ -10,11 +10,13 @@ interface Props {
   fileUploadedStatus: fileResponse;
   setFileUploadedStatus: React.Dispatch<React.SetStateAction<fileResponse>>;
   headers: string[]
-  setHeaders: (h: string[]) => void;
+  setHeaders: React.Dispatch<React.SetStateAction<string[]>>;
   continuousFeatures : Set<string>;
   setContinuousFeatures: React.Dispatch<React.SetStateAction<Set<string>>>;
   targetLabel : string | null;
-  setTargetLabel: (t: string | null) => void;
+  setTargetLabel: React.Dispatch<React.SetStateAction<string | null>>;
+  loadingStatus : boolean;
+  setLoadingStatus: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function FileUploader({
@@ -25,7 +27,9 @@ function FileUploader({
     continuousFeatures,
     setContinuousFeatures,
     targetLabel,
-    setTargetLabel
+    setTargetLabel,
+    loadingStatus,
+    setLoadingStatus,
   }: Props) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -85,6 +89,8 @@ function FileUploader({
       return;
     }
 
+    setLoadingStatus(true);
+
     // Append form data
     const formData = new FormData();
     formData.append("file", selectedFile); // MUST match server key
@@ -103,17 +109,27 @@ function FileUploader({
       }
 
       const data = await res.json();
-      setFileUploadedStatus(data);
+
+      console.log(data.status);
+      console.log(data.status === "success")
+
+      setFileUploadedStatus({
+        status: data.status as StatusType,
+        message: data.message
+      });
 
     } catch (err) {
       console.error("Upload failed:", err);
+    }
+    finally {
+      setLoadingStatus(false);
     }
   };
 
   return (
     <div>
-      <input type="file" ref={fileInputRef} accept=".csv,text/csv" onChange={onFileChange} />
-      <button onClick={onFileUpload}>Upload to Server</button>
+      <input type="file" ref={fileInputRef} accept=".csv,text/csv" onChange={onFileChange} disabled={loadingStatus === true} />
+      <button onClick={onFileUpload} disabled={loadingStatus === true}>Upload to Server</button>
       <p>File Uploaded Status: <strong>{fileUploadedStatus.message}</strong></p>
 
       {selectedFile && (
@@ -130,7 +146,7 @@ function FileUploader({
             <label key={header} style={{ display: "block" }}>
               <input
                 type="checkbox"
-                disabled={targetLabel === header || fileUploadedStatus.status === "success"}
+                disabled={targetLabel === header || fileUploadedStatus.status === "success" || loadingStatus === true}
                 checked={continuousFeatures.has(header)}
                 onChange={(e) => {
                   setContinuousFeatures(prev => {
@@ -156,7 +172,7 @@ function FileUploader({
               <label key={header} style={{ display: "block" }}>
                 <input
                   type="radio"
-                  disabled={continuousFeatures.has(header) || fileUploadedStatus.status === "success"}
+                  disabled={continuousFeatures.has(header) || fileUploadedStatus.status === "success" || loadingStatus === true}
                   name="targetLabel"
                   value={header}
                   checked={targetLabel === header}
@@ -173,4 +189,4 @@ function FileUploader({
   );
 }
 
-export default FileUploader;
+export default FileUploader;  
