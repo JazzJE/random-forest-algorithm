@@ -1,10 +1,10 @@
 #define _WIN32_WINNT 0x0A00  // Windows 10
-#include "httplib.h"
-#include "json.hpp"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <string>
+#include "httplib.h"
+#include "json.hpp"
 
 #include "server.h"
 #include "math_functions.h"
@@ -39,12 +39,43 @@ void start_server() {
     {
         nlohmann::json j;
 
-        std::string cont_feat_ident(Constants::CONTINUOUS_FEATURE_IDENTIFIER);
-        j["CONTINUOUS_FEATURE_IDENTIFIER"] = cont_feat_ident;
         j["DAT_FILE_IDENTIFIER"] = Constants::DAT_FILE_IDENTIFIER;
 
         res.set_content(j.dump(), "application/json");
     });
+
+    // Generate an algorithm in the backend, and then send a JSON object that will allow the frontend to display each tree
+    svr.Get("/generate_random_forest_algorithm", [](const httplib::Request& req, httplib::Response& res)
+    {
+        // Check if the number of trees field is missing
+        if (!req.form.has_field("number_of_trees"))
+        {
+            res.status = 400;
+            res.set_content("No 'number_of_trees' data found", "text/plain");
+            return;
+        }
+
+        // Check if the maximum depth level field is missing
+        if (!req.form.has_field("maximum_depth_level"))
+        {
+            res.status = 400;
+            res.set_content("No 'maximum_depth_level' data found", "text/plain");
+            return;
+        }
+    
+        // Check if the 
+        if (!req.form.has_field("number_of_trees"))
+        {
+            res.status = 400;
+            res.set_content("No 'number_of_trees' data found", "text/plain");
+            return;
+        }
+
+        // Parse the data
+        size_t number_of_trees = std::stoul(req.form.get_field("number_of_trees"));
+    });
+
+
 
     // Uploading CSV dataset to the project
     svr.Post("/upload_dataset", [&](const httplib::Request& req, httplib::Response& res) 
@@ -61,7 +92,7 @@ void start_server() {
         if (!req.form.has_file("file")) 
         {
             res.status = 400;
-            res.set_content("No file with key 'file' found", "text/plain");
+            res.set_content("No 'file' data found", "text/plain");
             return;
         }
 
@@ -69,7 +100,7 @@ void start_server() {
         if (!req.form.has_field("headers"))
         {
             res.status = 400;
-            res.set_content("No 'headers' found", "text/plain");
+            res.set_content("No 'headers' array data found", "text/plain");
             return;
         }
 
@@ -77,7 +108,7 @@ void start_server() {
         if (!req.form.has_field("continuous_features"))
         {
             res.status = 400;
-            res.set_content("No 'continuous features' array found", "text/plain");
+            res.set_content("No 'continuous_features' set data found", "text/plain");
             return;
         }
 
@@ -85,7 +116,7 @@ void start_server() {
         if (!req.form.has_field("target_label"))
         {
             res.status = 400;
-            res.set_content("No 'headers' array found", "text/plain");
+            res.set_content("No 'target_label' data found", "text/plain");
             return;
         }
         
@@ -111,12 +142,10 @@ void start_server() {
                 )
             );
 
-            printDataset(*dataset_content);
-
             Constants::UploadStatus status = Constants::UploadStatus::Success;
 
             nlohmann::json res_json;
-            res_json["status"] = to_string(status);
+            res_json["status"] = statusToString(status);
             res_json["message"] = std::string("File uploaded successfuly - ") + file.filename;
 
             res.set_content(res_json.dump(), "application/json");
@@ -130,7 +159,7 @@ void start_server() {
             Constants::UploadStatus status = Constants::UploadStatus::CSVParseError;
 
             nlohmann::json res_json;
-            res_json["status"] = to_string(status);
+            res_json["status"] = statusToString(status);
             res_json["message"] = std::string("File failed to upload - ") + error.what();
 
             res.set_content(res_json.dump(), "application/json");
@@ -144,7 +173,7 @@ void start_server() {
             Constants::UploadStatus status = Constants::UploadStatus::CSVParseError;
 
             nlohmann::json res_json;
-            res_json["status"] = to_string(status);
+            res_json["status"] = statusToString(status);
             res_json["message"] = "File failed to upload due to unknown error";
 
             res.set_content(res_json.dump(), "application/json");

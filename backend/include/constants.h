@@ -2,13 +2,12 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 
 namespace Constants
 {
     constexpr size_t DAT_FILE_IDENTIFIER = 0xDEADBEEF;
-    constexpr std::string_view CONTINUOUS_FEATURE_IDENTIFIER = "isAContinuousFeature";
-
+    constexpr signed int IS_LEAF_NODE_IDENTIFIER = -1;
+    
     enum class UploadStatus 
     {
         Success,
@@ -16,7 +15,7 @@ namespace Constants
     };
 }
 
-std::string to_string(Constants::UploadStatus status)
+inline std::string statusToString (Constants::UploadStatus status)
 {
     switch (status)
     {

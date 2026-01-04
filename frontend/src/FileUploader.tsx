@@ -1,14 +1,9 @@
 import { useState, useRef } from "react";
-
-type StatusType = "success" | "csv_parse_error" | "no_file_inputted";
-interface fileResponse {
-  status: StatusType;
-  message: string;
-}
+import type { FileResponse, FileStatusType } from "./types/api_responses.ts"
 
 interface Props {
-  fileUploadedStatus: fileResponse;
-  setFileUploadedStatus: React.Dispatch<React.SetStateAction<fileResponse>>;
+  fileUploadedStatus: FileResponse;
+  setFileUploadedStatus: React.Dispatch<React.SetStateAction<FileResponse>>;
   headers: string[]
   setHeaders: React.Dispatch<React.SetStateAction<string[]>>;
   continuousFeatures : Set<string>;
@@ -17,6 +12,8 @@ interface Props {
   setTargetLabel: React.Dispatch<React.SetStateAction<string | null>>;
   loadingStatus : boolean;
   setLoadingStatus: React.Dispatch<React.SetStateAction<boolean>>;
+  numberOfTrees : number;
+  setNumberOfTrees : React.Dispatch<React.SetStateAction<number>>
 }
 
 function FileUploader({
@@ -30,6 +27,8 @@ function FileUploader({
     setTargetLabel,
     loadingStatus,
     setLoadingStatus,
+    numberOfTrees,
+    setNumberOfTrees
   }: Props) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -73,7 +72,7 @@ function FileUploader({
     setContinuousFeatures(new Set());
     setTargetLabel(null);
     setSelectedFile(chosenFile);
-
+    setNumberOfTrees(1);
   };
 
   const onFileUpload = async () => {
@@ -89,16 +88,23 @@ function FileUploader({
       return;
     }
 
-    setLoadingStatus(true);
-
-    // Append form data
-    const formData = new FormData();
-    formData.append("file", selectedFile); // MUST match server key
-    formData.append("headers", JSON.stringify([...headers]));
-    formData.append("continuous_features", JSON.stringify([...continuousFeatures]));
-    formData.append("target_label", targetLabel);
+    // If the depth level of tree was not selected, then return and alert the user
+    if (!numberOfTrees) {
+      alert("[ERROR] No depth level amount was set!");
+      return;
+    }
 
     try {
+      setLoadingStatus(true);
+
+      // Append form data
+      const formData = new FormData();
+      formData.append("file", selectedFile); // MUST match server key
+      formData.append("headers", JSON.stringify([...headers]));
+      formData.append("continuous_features", JSON.stringify([...continuousFeatures]));
+      formData.append("target_label", targetLabel);
+      formData.append("number_of_trees", numberOfTrees.toString());
+
       const res = await fetch("http://localhost:8080/upload_dataset", {
         method: "POST",
         body: formData,
@@ -110,11 +116,8 @@ function FileUploader({
 
       const data = await res.json();
 
-      console.log(data.status);
-      console.log(data.status === "success")
-
       setFileUploadedStatus({
-        status: data.status as StatusType,
+        status: data.status as FileStatusType,
         message: data.message
       });
 
@@ -128,10 +131,19 @@ function FileUploader({
 
   return (
     <div>
-      <input type="file" ref={fileInputRef} accept=".csv,text/csv" onChange={onFileChange} disabled={loadingStatus === true} />
-      <button onClick={onFileUpload} disabled={loadingStatus === true}>Upload to Server</button>
-      <p>File Uploaded Status: <strong>{fileUploadedStatus.message}</strong></p>
+      <div>
+        <label style={{ display: "block" }}>Tree depth level:
+        <input type="number" min="1" max="255" disabled={loadingStatus === true || fileUploadedStatus.status === "success"} value={numberOfTrees}
+          onChange={(e) =>  {
+            const v = Math.max(1, Math.min(255, Number(e.target.value))); // Enforce max and min values of the input
+            setNumberOfTrees(v)
+          }} />
+        </label>
 
+        <input type="file" ref={fileInputRef} accept=".csv,text/csv" onChange={onFileChange} disabled={loadingStatus === true} />
+        <button onClick={onFileUpload} disabled={loadingStatus === true}>Upload to Server</button>
+        <p>File Uploaded Status: <strong>{fileUploadedStatus.message}</strong></p>
+      </div>
       {selectedFile && (
         <div>
 

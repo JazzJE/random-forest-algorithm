@@ -1,7 +1,7 @@
 #pragma once
 
-#include "json.hpp"
 #include <string>
+#include "json.hpp"
 
 #include "RandomForestModel.h"
 #include "DecisionTree.h"
@@ -11,8 +11,7 @@
 nlohmann::json convertModelToJSON(const RandomForestModel& provided_model);
 nlohmann::json convertTreeToJSON(const DecisionTree& provided_tree);
 
-RandomForestModel convertJSONToModel(nlohmann::json provided_model_json);
-DecisionTree convertJSONToTree(nlohmann::json provided_tree_json);
+std::set<size_t> getRandomSetOfFeatureIndices(size_t number_of_desired_indices, size_t number_of_elements);
 
 DynamicArray<std::string> parseStringArray(std::string string_array);
 

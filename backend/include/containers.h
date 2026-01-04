@@ -23,4 +23,27 @@ struct DynamicArray
                 elements[i] = other.elements[i];
         }
     }
+
+    DynamicArray& operator=(const DynamicArray& other)
+    {
+        if (this == &other)
+            return *this;
+
+        number_of_elements = other.number_of_elements;
+
+        if (number_of_elements == 0)
+        {
+            elements.reset();
+        }
+        else
+        {
+            T* new_elements = std::make_unique<T[]>(number_of_elements);
+            for (size_t i = 0; i < number_of_elements; ++i)
+                new_elements[i] = other.elements[i];
+
+            elements = std::move(new_elements);   // commit only after success
+        }
+
+        return *this;
+    }
 };

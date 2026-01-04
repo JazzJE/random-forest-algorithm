@@ -1,7 +1,8 @@
-#include "utils.h"
 #include <memory>
 #include <iostream>
 #include <iomanip>
+
+#include "utils.h"
 
 // Return all of the trees along with corresponding model/meta data into a JSON object
 nlohmann::json convertModelToJSON(const RandomForestModel& provided_model)
@@ -17,26 +18,24 @@ nlohmann::json convertTreeToJSON(const DecisionTree& provided_tree)
     return j;
 }
 
-// Program will load the saved JSON object for the model
-RandomForestModel convertJSONToModel(nlohmann::json provided_model_json)
+// Return a set of random indices, that range from 0 to number_of_elements - 1
+std::set<size_t> getRandomSetOfFeatureIndices(size_t number_of_desired_indices, size_t number_of_elements)
 {
-    return RandomForestModel();
-}
+    std::set<size_t> set_indices = {};
 
-// Helper method for loading the model
-DecisionTree convertJSONToTree(nlohmann::json provided_tree_json)
-{
-    const float* samples;
-    size_t number_of_samples;
-    size_t number_of_features;
-    std::unordered_set<size_t> continuous_feature_indices; 
-    size_t max_depth_level;
+    // Return an empty set if the number of desired indices is greater than the number of elements, or if the numbers are negative
+    if (number_of_desired_indices > number_of_elements || number_of_desired_indices < 0 || number_of_elements < 0)
+        return set_indices;
 
-    return DecisionTree(samples,
-             number_of_samples,
-             number_of_features,
-             continuous_feature_indices, 
-             max_depth_level);
+    for (size_t i = 0; i < number_of_desired_indices; ++i)
+    {
+        size_t selected_index = std::rand() % number_of_elements;
+        while (set_indices.find(selected_index) != set_indices.end())
+            selected_index = std::rand() % number_of_elements;
+        set_indices.insert(selected_index);
+    }
+
+    return set_indices;
 }
 
 /**
