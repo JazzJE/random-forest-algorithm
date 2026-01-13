@@ -16,7 +16,8 @@ class DecisionTree {
             std::unique_ptr<Node> left_node;
             std::unique_ptr<Node> right_node;
 
-            // Note that the splitting_feature_index will be set to -1 if it is a leaf node
+            // Note that the splitting_feature_index will be set to -1 if it is a leaf node, and that the
+            // leaf_node_value should only be used if the current node is a leaf node
             size_t splitting_feature_index;
             std::string leaf_node_value = "";
 
@@ -43,24 +44,20 @@ class DecisionTree {
         };
 
         std::unique_ptr<Node> root_node;
-
-        // Recursive function for building and stepping through each pointer to build the tree
-        void split_node(const std::unique_ptr<Node>& current_node_ptr, 
-            const DynamicArray<size_t>& current_sample_indices,
-            size_t current_depth_level, 
-            const CSVDatasetFileContent& dataset_content, 
-            size_t max_depth_level);
         
         // Helper function for leaves to determine which value appears the most in the group
         std::string computeLeafNodeValue(const CSVDatasetFileContent& dataset_content, const DynamicArray<size_t> current_sample_indices);
 
+        // Reference variable for accessing the model's config settings for splitting
+        const ModelConfigs& tree_ref_current_configs;
+
     public:
 
         // For building a decision tree from a dataset
-        DecisionTree(const CSVDatasetFileContent& dataset_content, size_t maximum_depth_level);
+        DecisionTree(const CSVDatasetFileContent& dataset_content, const ModelConfigs& model_ref_current_configs);
 
         // For building a decision tree from a provided JSON object
-        DecisionTree(const nlohmann::json& provided_tree_json);
+        DecisionTree(const nlohmann::json& provided_tree_json, const ModelConfigs& model_ref_current_configs);
 
         ~DecisionTree();
 

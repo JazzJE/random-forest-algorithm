@@ -6,7 +6,15 @@
 }
 
 .card {
-
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width:14vw;
+  height:5vh;
+  background-color:lightblue;
+  border-color: black solid 1px;
+  border-radius: 20px;
+  justify-content:space-evenly;
 }
 
 /* For drawing the loading icon */

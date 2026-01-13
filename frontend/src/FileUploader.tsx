@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
-import type { FileResponse, FileStatusType } from "./types/api_responses.ts"
+import type { FileUploadResponse, FileStatusType } from "./types/api_responses.ts"
 
 interface Props {
-  fileUploadedStatus: FileResponse;
-  setFileUploadedStatus: React.Dispatch<React.SetStateAction<FileResponse>>;
+  fileUploadedStatus: FileUploadResponse;
+  setFileUploadedStatus: React.Dispatch<React.SetStateAction<FileUploadResponse>>;
   headers: string[]
   setHeaders: React.Dispatch<React.SetStateAction<string[]>>;
   continuousFeatures : Set<string>;
@@ -12,8 +12,6 @@ interface Props {
   setTargetLabel: React.Dispatch<React.SetStateAction<string | null>>;
   loadingStatus : boolean;
   setLoadingStatus: React.Dispatch<React.SetStateAction<boolean>>;
-  numberOfTrees : number;
-  setNumberOfTrees : React.Dispatch<React.SetStateAction<number>>
 }
 
 function FileUploader({
@@ -27,18 +25,17 @@ function FileUploader({
     setTargetLabel,
     loadingStatus,
     setLoadingStatus,
-    numberOfTrees,
-    setNumberOfTrees
   }: Props) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Validation for checking if the uploaded file is a CSV file
   const isLikelyCSV = (file: File) => {
     const validMimeTypes = [
       "text/csv",
-      "application/vnd.ms-excel" // common on Windows
+      "application/vnd.ms-excel"
     ];
 
     const hasCsvExtension = file.name.toLowerCase().endsWith(".csv");
@@ -46,6 +43,7 @@ function FileUploader({
     return validMimeTypes.includes(file.type) || hasCsvExtension;
   };
 
+  // Get the headers of the file without parsing anything else; backend will parse
   const parseHeaders = async (file: File) => {
     const text = await file.text();          // Read entire file as string
     const firstLine = text.split(/\r?\n/)[0]; // Get the first line
@@ -55,14 +53,14 @@ function FileUploader({
   };
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Verify the file is a CSV
+    // Verify the file is a CSV, and if it isn't clear the preexistent file
     const chosenFile = e.target.files?.[0] ?? null;
     if (!chosenFile || !isLikelyCSV(chosenFile)) {
-      // Clear the text by the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
       alert("[ERROR] Please upload a CSV file");
+      setFileUploadedStatus(
+        { status: "no_file_inputted", message: "No file is currently detected"}
+      );
+      setSelectedFile(null);
       return;
     }
 
@@ -72,7 +70,6 @@ function FileUploader({
     setContinuousFeatures(new Set());
     setTargetLabel(null);
     setSelectedFile(chosenFile);
-    setNumberOfTrees(1);
   };
 
   const onFileUpload = async () => {
@@ -88,12 +85,6 @@ function FileUploader({
       return;
     }
 
-    // If the depth level of tree was not selected, then return and alert the user
-    if (!numberOfTrees) {
-      alert("[ERROR] No depth level amount was set!");
-      return;
-    }
-
     try {
       setLoadingStatus(true);
 
@@ -103,7 +94,6 @@ function FileUploader({
       formData.append("headers", JSON.stringify([...headers]));
       formData.append("continuous_features", JSON.stringify([...continuousFeatures]));
       formData.append("target_label", targetLabel);
-      formData.append("number_of_trees", numberOfTrees.toString());
 
       const res = await fetch("http://localhost:8080/upload_dataset", {
         method: "POST",
@@ -132,14 +122,6 @@ function FileUploader({
   return (
     <div>
       <div>
-        <label style={{ display: "block" }}>Tree depth level:
-        <input type="number" min="1" max="255" disabled={loadingStatus === true || fileUploadedStatus.status === "success"} value={numberOfTrees}
-          onChange={(e) =>  {
-            const v = Math.max(1, Math.min(255, Number(e.target.value))); // Enforce max and min values of the input
-            setNumberOfTrees(v)
-          }} />
-        </label>
-
         <input type="file" ref={fileInputRef} accept=".csv,text/csv" onChange={onFileChange} disabled={loadingStatus === true} />
         <button onClick={onFileUpload} disabled={loadingStatus === true}>Upload to Server</button>
         <p>File Uploaded Status: <strong>{fileUploadedStatus.message}</strong></p>

@@ -29,7 +29,6 @@ function App() {
     const [headers, setHeaders] = useState<string[]>([]);
     const [continuousFeatures, setContinuousFeatures] = useState<Set<string>>(new Set());
     const [targetLabel, setTargetLabel] = useState<string | null>(null);
-    const [numberOfTrees, setNumberOfTrees] = useState<number>(1);
 
     // Set during the random forest model generation process
     const [modelGeneratedStatus, setModelGeneratedStatus] = useState<ModelGenerateResponse>({
@@ -56,9 +55,7 @@ function App() {
             {loadingStatus && <LoadingOverlay />}
 
             <div className="card">
-                <p>
-                    Backend status: <strong>{backendStatus}</strong>
-                </p>
+                <p>Backend status:</p><strong>{backendStatus}</strong>
             </div>
 
             <Tree data={data} orientation="vertical" />
@@ -83,8 +80,6 @@ function App() {
             setTargetLabel={setTargetLabel}
             loadingStatus={loadingStatus}
             setLoadingStatus={setLoadingStatus}
-            numberOfTrees = {numberOfTrees}
-            setNumberOfTrees = {setNumberOfTrees}
             />
 
             

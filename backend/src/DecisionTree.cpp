@@ -5,36 +5,28 @@
 #include "math_functions.h"
 #include "Constants.h"
 
-DecisionTree::DecisionTree(const CSVDatasetFileContent& dataset_content, size_t maximum_depth_level)
+DecisionTree::DecisionTree(
+    const CSVDatasetFileContent& dataset_content, 
+    const ModelConfigs& model_ref_current_configs) 
+    : tree_ref_current_configs(model_ref_current_configs)
 {
     // Select a number of random samples with replacement for the initial group to be split
-    DynamicArray<size_t> initial_sample_indices(dataset_content.number_of_samples);
-    for (size_t i = 0; i < dataset_content.number_of_samples; ++i)
+    DynamicArray<size_t> initial_sample_indices(tree_ref_current_configs.number_of_bootstrapped_samples_per_tree);
+    for (size_t i = 0; i < tree_ref_current_configs.number_of_bootstrapped_samples_per_tree; ++i)
         initial_sample_indices.elements[i] = std::rand() % dataset_content.number_of_samples;
 
     size_t current_depth_level = 1;
-    split_node(root_node, initial_sample_indices, current_depth_level, dataset_content, maximum_depth_level);
 }
 
-DecisionTree::DecisionTree(const nlohmann::json& provided_tree_json)
+DecisionTree::DecisionTree(const nlohmann::json& provided_tree_json, const ModelConfigs& model_ref_current_configs)
+// Temporary to make it pass compiler errors
+: tree_ref_current_configs(model_ref_current_configs)
 {
     return;
 }
 
 DecisionTree::~DecisionTree()
 { return; }
-
-void DecisionTree::split_node(const std::unique_ptr<Node>& current_node_ptr, const DynamicArray<size_t>& current_sample_indices, size_t current_depth_level, const CSVDatasetFileContent& dataset_content, size_t max_depth_level)
-{
-    // If we've already reached the maximum depth level, then stop processing and make this a leaf node
-    if (current_depth_level >= max_depth_level)
-    {
-        current_node_ptr->splitting_feature_index = Constants::IS_LEAF_NODE_IDENTIFIER;
-
-    }
-
-    // Select sqrt(n) features to randomly be chosen for the current splitting
-}
 
 std::string DecisionTree::computeLeafNodeValue(const CSVDatasetFileContent& dataset_content, const DynamicArray<size_t> current_sample_indices)
 {

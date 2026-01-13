@@ -3,6 +3,7 @@
 #include <iomanip>
 
 #include "utils.h"
+#include "Constants.h"
 
 // Return all of the trees along with corresponding model/meta data into a JSON object
 nlohmann::json convertModelToJSON(const RandomForestModel& provided_model)
@@ -109,6 +110,34 @@ DynamicArray<std::string> parseStringArray(std::string string_array)
 
 void printDataset(const CSVDatasetFileContent& data)
 {
+    printDatasetMetadata(data);
+
+    // Sample data
+    std::cout << "Samples:\n";
+
+    for (size_t i = 0; i < data.number_of_samples; ++i)
+    {
+        std::cout << "Line " << i + 2 << "  Label: " << data.sample_labels.elements[i] << "\n";
+
+        for (size_t j = 0; j < data.number_of_features; ++j)
+        {
+            size_t idx = i * data.number_of_features + j;
+
+            std::cout << "   "
+                      << std::setw(15) << data.feature_names.elements[j]
+                      << " = "
+                      << std::setw(8) << data.sample_data.elements[idx]
+                      << "\n";
+        }
+
+        std::cout << "\n";
+    }
+
+    std::cout << "=================================\n";
+}
+
+void printDatasetMetadata(const CSVDatasetFileContent& data)
+{
     std::cout << "\n========== CSV DATASET ==========\n";
 
     std::cout << "Samples:   " << data.number_of_samples << "\n";
@@ -131,26 +160,22 @@ void printDataset(const CSVDatasetFileContent& data)
 
     std::cout << "\n";
 
-    // Sample data
-    std::cout << "Samples:\n";
+    std::cout << "=================================\n";
+}
 
-    for (size_t i = 0; i < data.number_of_samples; ++i)
-    {
-        std::cout << "Line " << i + 2 << "  Label: " << data.sample_labels.elements[i] << "\n";
+void printModelConfigs(const ModelConfigs& current_configs)
+{
+    std::cout << "\n========== MODEL GENERATION CONFIGS ==========\n";
 
-        for (size_t j = 0; j < data.number_of_features; ++j)
-        {
-            size_t idx = i * data.number_of_features + j;
+    std::cout << "Number of bootstrapped samples per tree:   " << current_configs.number_of_bootstrapped_samples_per_tree << "\n";
+    std::cout << "Number of trees:  " << current_configs.number_of_trees << "\n";
 
-            std::cout << "   "
-                      << std::setw(15) << data.feature_names.elements[j]
-                      << " = "
-                      << std::setw(8) << data.sample_data.elements[idx]
-                      << "\n";
-        }
+    std::cout << "\n========== TREE GENERATION CONFIGS ==========\n";
 
-        std::cout << "\n";
-    }
+    std::cout << "Max depth level: " << current_configs.maximum_depth_level << "\n";
+    std::cout << "Min sample split: " << current_configs.minimum_sample_split << "\n";
+    std::cout << "Max leaf nodes: " << current_configs.maximum_leaf_nodes<< "\n";
+    std::cout << "Minimum entropy: " << current_configs.minimum_entropy << "\n\n";
 
     std::cout << "=================================\n";
 }

@@ -6,7 +6,7 @@ export interface FileUploadResponse {
 }
 
 // To standardize backend status messages for model generation
-export type ModelStatusType = "success" | "model_failed_to_generate";
+export type ModelStatusType = "success" | "model_failed_to_generate" | "no_model_generated";
 export interface ModelGenerateResponse { 
   status : ModelStatusType;
   message : string;

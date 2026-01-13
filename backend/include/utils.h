@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 #include "json.hpp"
 
 #include "RandomForestModel.h"
@@ -15,4 +16,7 @@ std::set<size_t> getRandomSetOfFeatureIndices(size_t number_of_desired_indices, 
 
 DynamicArray<std::string> parseStringArray(std::string string_array);
 
+// Functions primarily used for testing purposes
 void printDataset(const CSVDatasetFileContent& data);
+void printDatasetMetadata(const CSVDatasetFileContent& data);
+void printModelConfigs(const ModelConfigs& current_configs);

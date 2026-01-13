@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 import type { ModelGenerateResponse, ModelStatusType } from "./types/api_responses.ts"
 
 interface Props {
@@ -15,20 +15,99 @@ function RandomForestAlgorithmGenerator({
         setLoadingStatus
     } : Props)
 {
-    // Customization options for each tree
-    const [numberOfBootstrappedSamplesPerTree, setNumberOfBootstrappedSamplesPerTree] = useState<number>(1);
-    const [numberOfTrees, setNumberOfTrees] = useState<number>(1);
-    const [maximumDepthLevel, setMaximumDepthLevel] = useState<number>(1);
+
+    // For model generation
+    const numberOfBootstrappedSamplesInputRef = useRef<HTMLInputElement>(null);
+    const numberOfTreesInputRef = useRef<HTMLInputElement>(null);
+    // For tree generation
+    const maxDepthLevelInputRef = useRef<HTMLInputElement>(null);
+    const minSampleSplitInputRef = useRef<HTMLInputElement>(null);
+    const maxLeafNodesInputRef = useRef<HTMLInputElement>(null);
+    const minEntropyInputRef = useRef<HTMLInputElement>(null);
 
     const GenerateRandomForestAlgorithm = async () => {
+
+        // Check if the number of bootstrapped samples per tree if it is empty, less than 1 or is an invalid input
+        const bootstrapSamplesPerTree = Number(numberOfBootstrappedSamplesInputRef.current?.value);
+        if (
+            Number.isNaN(bootstrapSamplesPerTree) || 
+            !Number.isInteger(bootstrapSamplesPerTree) ||
+            bootstrapSamplesPerTree < 1
+        )
+        {
+            alert("[ERROR] Please ensure you enter an integer greater than or equal to 1 for number of bootstrapped samples per tree.");
+            return;
+        }
+
+        // Check if the number of trees inputted is empty, less than 1 or is an invalid input
+        const numberOfTrees = Number(numberOfTreesInputRef.current?.value);
+        if (
+            Number.isNaN(numberOfTrees) || 
+            !Number.isInteger(numberOfTrees) || 
+            numberOfTrees < 1
+        )
+        {
+            alert("[ERROR] Please ensure you enter an integer greater than or equal to 1 for number of trees.");
+            return;
+        }
+
+        // Check if the max depth level for each tree is empty, less than 1 or is an invalid input
+        const maxDepthLevel = Number(maxDepthLevelInputRef.current?.value);
+        if (
+            Number.isNaN(maxDepthLevel) || 
+            !Number.isInteger(maxDepthLevel) || 
+            maxDepthLevel < 1
+        )
+        {
+            alert("[ERROR] Please ensure you enter an integer greater than or equal to 1 for the maximum depth level.");
+            return;
+        }
+
+        // Check if the minimum number of samples to split is empty, less than 1, or is an invalid input
+        const minSampleSplit = Number(minSampleSplitInputRef.current?.value);
+        if (
+            Number.isNaN(minSampleSplit) || 
+            !Number.isInteger(minSampleSplit) || 
+            minSampleSplit < 1
+        )
+        {
+            alert("[ERROR] Please ensure you enter an integer greater than or equal to 1 for the minimum sample split.");
+            return;
+        }
+
+        // Check if the minimum number of samples to split is empty, less than 1, or is an invalid input
+        const maxLeafNodes = Number(maxLeafNodesInputRef.current?.value);
+        if (
+            Number.isNaN(maxLeafNodes) || 
+            !Number.isInteger(maxLeafNodes) || 
+            maxLeafNodes < 1
+        )
+        {
+            alert("[ERROR] Please ensure you enter an integer greater than or equal to 1 for the max number of leaf nodes.");
+            return;
+        }
+
+        // Check if the minimum number of samples to split is empty, less than 1, or is an invalid input
+        const minEntropy = Number(minEntropyInputRef.current?.value);
+        if (Number.isNaN(minEntropy) || minEntropy > 1 || minEntropy < 0)
+        {
+            alert("[ERROR] Please ensure you enter a double value greater than 0 but less than 1 for the minimum entropy a sample set can have.");
+            return;
+        }
+
         try
         {
             setLoadingStatus(true);
 
             const formData = new FormData();
-            formData.append("number_of_bootstrapped_samples_per_tree", numberOfBootstrappedSamplesPerTree.toString());
+            
+            formData.append("number_of_bootstrapped_samples_per_tree", bootstrapSamplesPerTree.toString());
             formData.append("number_of_trees", numberOfTrees.toString());
-            formData.append("maximum_depth_level", maximumDepthLevel.toString());
+
+            formData.append("maximum_depth_level", maxDepthLevel.toString());
+            formData.append("min_sample_split", minSampleSplit.toString());
+            formData.append("max_leaf_nodes", maxLeafNodes.toString());
+            formData.append("min_entropy", minEntropy.toString());
 
             const res = await fetch("http://localhost:8080/generate_random_forest_algorithm", {
                 method: "POST",
@@ -54,38 +133,37 @@ function RandomForestAlgorithmGenerator({
 
     return (
         <>
-            {/* Input for getting the number of bootstrapped samples each tree should train with*/}
+            {/* Inputs for the model */}
+            <h2>Model Generation Configs</h2>
             <label style={{ display: "block" }}>
                 Number of bootstrapped samples per tree: 
-                <input type="number" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} 
-                onChange={(e) => 
-                {
-                    const v = Math.min(1, Number(e.target.value))
-                    setNumberOfBootstrappedSamplesPerTree(v);
-                }}/>
+                <input ref={numberOfBootstrappedSamplesInputRef} type="number" step="1" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} />
             </label>
-
-            {/* Input for getting the number of trees in the algorithm desired */}
             <label style={{ display: "block" }}>
                 Number of trees:
-                <input type="number" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"}
-                onChange={(e) =>  {
-                    const v = Math.max(1, Math.min(255, Number(e.target.value))); // Enforce max and min values of the input
-                    setNumberOfTrees(v)
-                }} />
+                <input ref={numberOfTreesInputRef} type="number" step="1" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} />
             </label>
 
-            {/* Input for getting the maximum depth level for each tree before terminating */}
+            {/* Inputs for the trees */}
+            <h2>Terminating Configs for Trees</h2>
             <label style={{ display: "block" }}>
                 Tree depth level:
-                <input type="number" min="1" max="255" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"}
-                onChange={(e) =>  {
-                    const v = Math.max(1, Math.min(255, Number(e.target.value))); // Enforce max and min values of the input
-                    setMaximumDepthLevel(v)
-                }} />
+                <input ref={maxDepthLevelInputRef} type="number" step="1" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} />
+            </label>
+            <label style={{ display: "block" }}>
+                Minimum samples for split:
+                <input ref={minSampleSplitInputRef} type="number" step="1" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} />
+            </label>
+            <label style={{ display: "block" }}>
+                Maximum leaf nodes:
+                <input ref={maxLeafNodesInputRef} type="number" step="1" min="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} />
+            </label>
+            <label style={{ display: "block" }}>
+                Minimum entropy (double value):
+                <input ref={minEntropyInputRef} type="number" min="0" max="1" disabled={loadingStatus === true || modelGeneratedStatus.status === "success"} />
             </label>
 
-            <button onClick={GenerateRandomForestAlgorithm}>Generate Random Forest Algorithm</button>
+            <button disabled={loadingStatus || modelGeneratedStatus.status === "success"} onClick={GenerateRandomForestAlgorithm}>Generate Random Forest Algorithm</button>
         </>
     )
 }
