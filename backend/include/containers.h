@@ -51,15 +51,20 @@ struct DynamicArray
 
     // Move semantics
     DynamicArray& operator=(DynamicArray&& other) noexcept
+    {
+        if (this != &other)
         {
-            if (this != &other)
-            {
-                elements = std::move(other.elements);
-                number_of_elements = other.number_of_elements;
-                other.number_of_elements = 0;
-            }
-            return *this;
+            elements = std::move(other.elements);
+            number_of_elements = other.number_of_elements;
+            other.number_of_elements = 0;
         }
+        return *this;
+    }
+
+    T& operator[] (size_t index)
+    {
+        return elements[index];
+    }
 };
 
 struct ModelConfigs 
@@ -81,7 +86,6 @@ struct ModelConfigs
         number_of_bootstrapped_samples_per_tree(number_of_boostrapped_samples_per_tree), number_of_trees(number_of_trees), maximum_depth_level(maximum_depth_level), minimum_sample_split(minimum_sample_split), maximum_leaf_nodes(maximum_leaf_nodes), minimum_entropy(minimum_entropy) {}
 
     // Copy constructor
-    // Add copy constructor
     ModelConfigs(const ModelConfigs& other)
         : number_of_bootstrapped_samples_per_tree(other.number_of_bootstrapped_samples_per_tree),
           number_of_trees(other.number_of_trees),
@@ -90,16 +94,4 @@ struct ModelConfigs
           maximum_leaf_nodes(other.maximum_leaf_nodes),
           minimum_entropy(other.minimum_entropy)
     {}
-};
-
-struct PrimaryQueue
-{
-    struct QueueNode 
-    {
-        std::unique_ptr<QueueNode> left;
-        std::unique_ptr<QueueNode> right;
-
-    };
-
-    std::unique_ptr<QueueNode> first;
 };

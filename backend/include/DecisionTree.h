@@ -8,42 +8,64 @@
 #include "CSVDatasetFileContent.h"
 
 class DecisionTree {
-    private:
-
+    public:
         // If both left_node, right_node = nullptr, then the node is a leaf node
-        struct Node
+        struct TreeNode
         {
-            std::unique_ptr<Node> left_node;
-            std::unique_ptr<Node> right_node;
+            std::unique_ptr<TreeNode> left_node;
+            std::unique_ptr<TreeNode> right_node;
 
-            // Note that the splitting_feature_index will be set to -1 if it is a leaf node, and that the
-            // leaf_node_value should only be used if the current node is a leaf node
+            // Note that the splitting_feature_index will be set to -1 if it is a leaf node
             size_t splitting_feature_index;
-            std::string leaf_node_value = "";
 
-            virtual ~Node() {};  
+            // Splitting value threshold; if the feature is a boolean, then should be set to 1
+            // so that target_labels >= threshold have their samples go right
+            double split_threshold_value;
+
+            // These should only be used if they are leaf nodes
+            bool is_leaf_node;
+            std::string leaf_node_value;
         };
 
-        // Splitting a discrete valued feature
-        // Left nodes are always false groups
-        // Right nodes are always true groups
-        struct DiscreteSplitNode : public Node 
+    private: 
+
+        // Used for creating a Best First Search algorithm and determining other terminating conditions 
+        // Where the first node will always be the node with the highest amount of information gain; max priority queue
+        struct InfoGainPriorityQueue
         {
-            DiscreteSplitNode();
-            ~DiscreteSplitNode() override;
+            public: 
+                // These nodes should not be able to edit the tree node they point to
+                struct InfoGainQueueNode 
+                {
+                    double information_gain; 
+                    size_t current_level;
+                    TreeNode* node_ptr;
+                    DynamicArray<size_t> sample_indices;
+
+                    InfoGainQueueNode() : information_gain(0), current_level(0), node_ptr(nullptr) {}
+                    InfoGainQueueNode(double information_gain, size_t current_level, TreeNode* split_node_ptr) : 
+                    information_gain(information_gain), current_level(current_level), node_ptr(split_node_ptr) {}
+                };
+
+            private:
+                size_t getParentIndex(size_t child_index);
+                size_t getLeftChildIndex(size_t parent_index);
+                size_t getRightChildIndex(size_t parent_index);
+                void resizeHeapArray(size_t new_max_number_of_nodes);
+
+            size_t max_number_of_nodes;
+            size_t current_number_of_nodes;
+            DynamicArray<InfoGainQueueNode> heap_array;
+
+            public: 
+
+                void insertQueueNode(double information_gain, size_t current_level, TreeNode* node_ptr);
+                InfoGainQueueNode dequePriorityNode();
+
+                size_t getCurrentNumberOfNodes();
         };
 
-        // Splitting a continuous valued feature
-        // Left nodes are always "less than the feature" groups
-        // Right nodes are always "greater than or equal to the feature" groups
-        struct ContinuousSplitNode : public Node
-        {
-            float split_value;
-            ContinuousSplitNode();
-            ~ContinuousSplitNode() override;
-        };
-
-        std::unique_ptr<Node> root_node;
+        std::unique_ptr<TreeNode> root_node;
         
         // Helper function for leaves to determine which value appears the most in the group
         std::string computeLeafNodeValue(const CSVDatasetFileContent& dataset_content, const DynamicArray<size_t> current_sample_indices);
